@@ -1,0 +1,42 @@
+# Lipas -> TAK -integraatio: generaattori + tiedostojakelu (+ feederit myöhemmin)
+#
+# Käyttö:
+#   cp .env.example .env   # täytä arvot
+#   docker compose up -d
+#
+# Generaattori ajaa heti käynnistyessään ja sen jälkeen LIPAS2TAK_EVERY_DAYS välein.
+
+x-lipas2tak-image: &lipas2tak-image
+  image: ${LIPAS2TAK_IMAGE:-ghcr.io/street3r/python-lipas2tak-tool:main}
+
+services:
+  generator:
+    <<: *lipas2tak-image
+    restart: unless-stopped
+    environment:
+      LIPAS2TAK_PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:?aseta .env:ssä}
+    command: ["schedule", "--every-days", "${LIPAS2TAK_EVERY_DAYS:-7}", "--dump", "/data/raw"]
+    volumes:
+      - lipas2tak-data:/data
+
+  web:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    ports:
+      - "${WEB_BIND:-127.0.0.1:8080}:80"   # TLS hoidetaan palvelimen reverse proxyssa
+    volumes:
+      - lipas2tak-data:/data:ro
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on: [generator]
+
+  # Feederit (tulossa): yksi kontti per TAK Server / ryhmä / sertifikaatti.
+  # feeder-kansallispuistot:
+  #   <<: *lipas2tak-image
+  #   command: ["feed", "--config", "/feeders/kansallispuistot.yaml"]
+  #   volumes:
+  #     - lipas2tak-data:/data:ro
+  #     - ./feeders:/feeders:ro
+  #     - ./certs/kansallispuistot:/certs:ro
+
+volumes:
+  lipas2tak-data:
