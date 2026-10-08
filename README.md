@@ -1,39 +1,60 @@
 # docker-lipas-integration
 
-Docker Compose -pino, joka pyörittää Lipas → TAK -palvelua:
+Docker Compose stack that runs the Lipas → TAK service:
 
-| Palvelu | Tehtävä |
+| Service | Role |
 |---|---|
-| `generator` | [python-lipas2tak-tool](https://github.com/Street3r/python-lipas2tak-tool): hakee Lipaksen datan ja tuottaa datapaketit, KMZ:t, KML-verkkolinkit ja GPX:t viikoittain |
-| `web` | nginx jakaa tiedostot (`index.html` listaa kaikki). TLS hoidetaan palvelimen reverse proxyssa |
-| `feeder-*` | *(tulossa)* vie valitut alueet Data Syncin missioihin. Yksi kontti per TAK Server / ryhmä / sertifikaatti |
+| `generator` | [python-lipas2tak-tool](https://github.com/Street3r/python-lipas2tak-tool): fetches Lipas (and OpenStreetMap) data and produces data packages, KMZ files, KML network links and GPX routes weekly |
+| `web` | nginx serves the files (`index.html` lists everything). TLS is handled by the server's reverse proxy |
+| `feeder-*` | *(planned)* pushes selected areas into Data Sync missions. One container per TAK Server / group / certificate |
 
-## Käyttöönotto
+## Setup
 
-Kloonaa molemmat repot rinnakkain samaan kansioon:
+Clone both repositories side by side:
 
 ```bash
 mkdir lipas && cd lipas
 git clone https://github.com/Street3r/python-lipas2tak-tool
 git clone https://github.com/Street3r/docker-lipas-integration
-cd docker-lipas-integration          # compose-komennot ajetaan tässä hakemistossa
+cd docker-lipas-integration          # run the compose commands in this directory
 cp .env.example .env
-docker compose build generator       # rakentaa imagen ../python-lipas2tak-tool:sta
+docker compose build generator       # builds the image from ../python-lipas2tak-tool
 docker compose up -d generator
 docker compose logs -f generator
 ```
 
-Tulokset saa ulos volyymista: `docker compose cp generator:/data/output ./output`
-(raakadata: `generator:/data/raw`). Tiedostojakelu nginxillä: `docker compose up -d web`.
+Copy the results out of the volume: `docker compose cp generator:/data/output ./output`
+(raw data: `generator:/data/raw`). Serve the files with nginx: `docker compose up -d web`.
 
-Ensimmäinen ajo kestää useita minuutteja (Lipas-sivutus, OSM, maakuntarajat). Raakadata tallentuu volyymiin (`/data/raw`), jotta ongelmat voi selvittää ajamatta hakua uudelleen.
+The first run takes several minutes (Lipas paging, OSM, region boundaries). Raw data is saved in the volume (`/data/raw`) so problems can be investigated without fetching again.
 
-KML-verkkolinkki ATAKiin: `https://<domain>/fi/kansallispuistot/nuuksio/nuuksio_fi.kml` (tai suoraan `.kmz`). Kuvakesarja: `https://<domain>/iconset/lipas2tak_iconset.zip`.
+Updating after a `git pull` in either repository:
 
-## Feederit (suunnitelma)
+```bash
+docker compose build generator && docker compose up -d --force-recreate generator
+```
 
-Jokainen feeder lukee `index.json`:n ja:
-1. valitsee konfiguraationsa mukaiset alueet ja kielen (esim. `kansallispuistot/*`, `fi`)
-2. luo tai päivittää Data Sync -mission per alue (TAK Server 5.8 API, client-sertifikaatti)
-3. lisää uudet ja muuttuneet CoT:t ja poistaa poistuneet (UID = `lipas-<id>`, `loi-<uuid>`, `osm-<id>`)
-4. rajaa mission ryhmään tai kanavaan
+KML network link for ATAK: `https://<domain>/fi/kansallispuistot/nuuksio/nuuksio_fi.kml` (or the `.kmz` directly). Icon set: `https://<domain>/iconset/lipas2tak_iconset.zip`.
+
+## Custom icons
+
+By default the generator uses the tool's own icon set. To use another set, see [icons/README.md](icons/README.md).
+
+## Feeders (planned)
+
+Each feeder reads `index.json` and:
+1. selects the areas and language from its configuration (e.g. `kansallispuistot/*`, `fi`)
+2. creates or updates one Data Sync mission per area (TAK Server 5.8 API, client certificate)
+3. adds new and changed CoTs and removes deleted ones (UIDs `lipas-<id>`, `loi-<uuid>`, `osm-<id>`)
+4. restricts the mission to a group or channel
+
+## Licence
+
+- This repository: [MIT](LICENSE).
+- The data served by this stack is licensed under [ODbL 1.0](https://opendatacommons.org/licenses/odbl/1-0/) and must be attributed: *Lipas – University of Jyväskylä (CC BY 4.0); © OpenStreetMap contributors (ODbL 1.0); Statistics Finland (CC BY 4.0)*. See [LICENSE-DATA.md](https://github.com/Street3r/python-lipas2tak-tool/blob/main/LICENSE-DATA.md) in python-lipas2tak-tool. The attribution is embedded in the generated files and shown in `index.html`; keep it when redistributing (e.g. via Data Sync).
+
+---
+
+## Suomeksi lyhyesti
+
+Compose-pino ajaa python-lipas2tak-tool-generaattorin viikoittain ja jakaa tuotokset nginxillä; Data Sync -feederit tulevat myöhemmin. Koodi on MIT-lisensoitu, ja jaettava aineisto on ODbL 1.0 -lisensoitu lähdemainintoineen (Lipas / Jyväskylän yliopisto, © OpenStreetMapin tekijät, Tilastokeskus).

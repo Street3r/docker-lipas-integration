@@ -1,6 +1,6 @@
 .env
 certs/
 data/
-# Pilotin kuvakkeet (tekijänoikeus: Metsähallitus) eivät kuulu repoon
+# Custom icon sets are not committed (see icons/README.md)
 icons/*
 !icons/README.md
