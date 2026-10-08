@@ -49,7 +49,7 @@ In ATAK: **Import → KML Link**, paste the URL and enable auto refresh (e.g. 86
 
 ## Publishing to GitHub (optional)
 
-The `publisher` container watches the generator output. After every run it builds a public version from the saved raw data and force-pushes it to the `data` branch of [finland-outdoor-tak-data](https://github.com/Street3r/finland-outdoor-tak-data). The public version always uses the default icon set, so custom icons are never published. The branch keeps only the latest version, and nothing is pushed when no file changed.
+The `publisher` container watches the generator output. After every run it builds a public version from the saved raw data and force-pushes it to the `data` branch of [finland-outdoor-tak-data](https://github.com/Street3r/finland-outdoor-tak-data). The public version always uses the default icon set, so custom icons are never published. The branch keeps only the latest version (a single commit). When no data changed, only the check time is updated, so the pages show when the data was last verified. Long pushes use ssh keepalive, and if a push is cut off the files are uploaded in batches.
 
 1. Create a deploy key, readable by the container user (uid 10001):
    ```bash
@@ -59,7 +59,7 @@ The `publisher` container watches the generator output. After every run it build
    cat secrets/github_deploy_key.pub
    ```
 2. In the data repository, go to **Settings → Deploy keys → Add deploy key**. Paste the public key and tick **Allow write access**.
-3. Recommended: protect `main` with **Settings → Rules → Rulesets → New branch ruleset** (target `main`, *Restrict updates* and *Block force pushes*; add yourself as a bypass actor). The deploy key can then only change `data`.
+3. Recommended: protect `main` with **Settings → Rules → Rulesets → New branch ruleset** (target the default branch, *Restrict deletions* and *Block force pushes*). A deploy key's write access always covers the whole repository; this rule keeps `main` from being deleted or overwritten, and the publisher itself only ever pushes to `data`. (*Restrict updates* would also block the QR code workflow. On a free plan rulesets are enforced only once the repository is public.)
 4. In `.env`, set `COMPOSE_PROFILES=github` and check the `PUBLISH_*` values.
 5. Try it without pushing:
    ```bash
