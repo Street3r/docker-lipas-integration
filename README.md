@@ -38,7 +38,7 @@ docker compose build generator && docker compose up -d --force-recreate generato
 
 In ATAK: **Import → KML Link**, paste the URL and enable auto refresh (e.g. 86400 s).
 
-- All areas: `<PUBLIC_BASE_URL>/lipas2tak_fi.kml` (or `lipas2tak_en.kml`). National parks are on by default; regions are listed but off. Switch areas on and off in Overlay Manager → Network Resources.
+- All areas: `<PUBLIC_BASE_URL>/links/all_fi.kml` (or `links/all_en.kml`). National parks are on by default; regions are listed but off. Switch areas on and off in Overlay Manager → Network Resources.
 - A single area: `<PUBLIC_BASE_URL>/fi/kansallispuistot/nuuksio/nuuksio_fi.kmz`.
 - Icon set (install once): `<PUBLIC_BASE_URL>/iconset/lipas2tak_iconset.zip`.
 
