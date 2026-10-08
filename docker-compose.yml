@@ -36,6 +36,27 @@ services:
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on: [generator]
 
+  # Publisher: builds a public version (own icon set, public URL) after every
+  # generator run and pushes it to a git branch served by GitHub Pages.
+  # Enabled only with the "github" profile: COMPOSE_PROFILES=github in .env.
+  publisher:
+    <<: *lipas2tak-image
+    profiles: ["github"]
+    restart: unless-stopped
+    environment:
+      PUBLISH_REPO: ${PUBLISH_REPO:-git@github.com:Street3r/finland-outdoor-tak-data.git}
+      PUBLISH_BRANCH: ${PUBLISH_BRANCH:-data}
+      PUBLISH_BASE_URL: ${PUBLISH_BASE_URL:-https://street3r.github.io/finland-outdoor-tak-data}
+      GIT_SSH_COMMAND: >-
+        ssh -i /run/secrets/deploy_key -o IdentitiesOnly=yes
+        -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile=/data/publish/known_hosts
+    command: ["publish", "--raw", "/data/raw", "--workdir", "/data/publish",
+              "--watch", "/data/output/index.json", "--interval", "600"]
+    volumes:
+      - lipas2tak-data:/data
+      - ${PUBLISH_DEPLOY_KEY:-./secrets/github_deploy_key}:/run/secrets/deploy_key:ro
+    depends_on: [generator]
+
   # Feeders (planned): one container per TAK Server / group / certificate.
   # feeder-kansallispuistot:
   #   <<: *lipas2tak-image

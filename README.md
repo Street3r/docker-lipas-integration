@@ -6,6 +6,7 @@ Docker Compose stack that runs the Lipas → TAK service:
 |---|---|
 | `generator` | [python-lipas2tak-tool](https://github.com/Street3r/python-lipas2tak-tool): fetches Lipas (and OpenStreetMap) data and produces data packages, KMZ files, KML network links and GPX routes weekly |
 | `web` | nginx serves the files (`index.html` lists everything). TLS is handled by the server's reverse proxy |
+| `publisher` | *(optional, profile `github`)* publishes a public version to a GitHub branch served by GitHub Pages |
 | `feeder-*` | *(planned)* pushes selected areas into Data Sync missions. One container per TAK Server / group / certificate |
 
 ## Setup
@@ -45,6 +46,29 @@ In ATAK: **Import → KML Link**, paste the URL and enable auto refresh (e.g. 86
 `index.html` lists every URL.
 
 **Internal network only:** set `PUBLIC_BASE_URL=http://<server LAN IP>:8080` and `WEB_BIND=0.0.0.0:8080` (or the LAN IP) in `.env`, then rebuild the outputs. The base URL is written into the link files, so changing it later means the links have to be re-added on the devices.
+
+## Publishing to GitHub (optional)
+
+The `publisher` container watches the generator output. After every run it builds a public version from the saved raw data and force-pushes it to the `data` branch of [finland-outdoor-tak-data](https://github.com/Street3r/finland-outdoor-tak-data). The public version always uses the default icon set, so custom icons are never published. The branch keeps only the latest version, and nothing is pushed when no file changed.
+
+1. Create a deploy key, readable by the container user (uid 10001):
+   ```bash
+   mkdir -p secrets
+   ssh-keygen -t ed25519 -N "" -C lipas2tak-publisher -f secrets/github_deploy_key
+   sudo chown 10001:10001 secrets/github_deploy_key && chmod 600 secrets/github_deploy_key
+   cat secrets/github_deploy_key.pub
+   ```
+2. In the data repository, go to **Settings → Deploy keys → Add deploy key**. Paste the public key and tick **Allow write access**.
+3. Recommended: protect `main` with **Settings → Rules → Rulesets → New branch ruleset** (target `main`, *Restrict updates* and *Block force pushes*; add yourself as a bypass actor). The deploy key can then only change `data`.
+4. In `.env`, set `COMPOSE_PROFILES=github` and check the `PUBLISH_*` values.
+5. Try it without pushing:
+   ```bash
+   docker compose build
+   docker compose run --rm publisher publish --raw /data/raw --workdir /data/publish --dry-run
+   ```
+6. Start it: `docker compose up -d publisher`, then `docker compose logs -f publisher`.
+
+The publisher checks for new output every 10 minutes and publishes the first time it starts.
 
 ## Custom icons
 

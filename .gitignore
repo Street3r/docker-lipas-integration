@@ -4,3 +4,4 @@ data/
 # Custom icon sets are not committed (see icons/README.md)
 icons/*
 !icons/README.md
+secrets/
