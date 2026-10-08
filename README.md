@@ -10,12 +10,21 @@ Docker Compose -pino, joka pyörittää Lipas → TAK -palvelua:
 
 ## Käyttöönotto
 
+Kloonaa molemmat repot rinnakkain samaan kansioon:
+
 ```bash
-cp .env.example .env          # aseta PUBLIC_BASE_URL
-docker login ghcr.io          # jos image on yksityinen
-docker compose up -d
+mkdir lipas && cd lipas
+git clone https://github.com/Street3r/python-lipas2tak-tool
+git clone https://github.com/Street3r/docker-lipas-integration
+cd docker-lipas-integration          # compose-komennot ajetaan tässä hakemistossa
+cp .env.example .env
+docker compose build generator       # rakentaa imagen ../python-lipas2tak-tool:sta
+docker compose up -d generator
 docker compose logs -f generator
 ```
+
+Tulokset saa ulos volyymista: `docker compose cp generator:/data/output ./output`
+(raakadata: `generator:/data/raw`). Tiedostojakelu nginxillä: `docker compose up -d web`.
 
 Ensimmäinen ajo kestää useita minuutteja (Lipas-sivutus, OSM, maakuntarajat). Raakadata tallentuu volyymiin (`/data/raw`), jotta ongelmat voi selvittää ajamatta hakua uudelleen.
 

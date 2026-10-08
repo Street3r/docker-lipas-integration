@@ -6,15 +6,19 @@
 #
 # Generaattori ajaa heti käynnistyessään ja sen jälkeen LIPAS2TAK_EVERY_DAYS välein.
 
+# Oletuksena image rakennetaan paikallisesti viereisestä kloonista:
+#   git clone https://github.com/Street3r/python-lipas2tak-tool ../python-lipas2tak-tool
+# Valmiin imagen voi ottaa käyttöön .env:ssä (LIPAS2TAK_IMAGE=ghcr.io/...).
 x-lipas2tak-image: &lipas2tak-image
-  image: ${LIPAS2TAK_IMAGE:-ghcr.io/street3r/python-lipas2tak-tool:main}
+  image: ${LIPAS2TAK_IMAGE:-lipas2tak:local}
+  build: ${LIPAS2TAK_BUILD_CONTEXT:-../python-lipas2tak-tool}
 
 services:
   generator:
     <<: *lipas2tak-image
     restart: unless-stopped
     environment:
-      LIPAS2TAK_PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:?aseta .env:ssä}
+      LIPAS2TAK_PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-http://localhost:8080}
     command: ["schedule", "--every-days", "${LIPAS2TAK_EVERY_DAYS:-7}", "--dump", "/data/raw"]
     volumes:
       - lipas2tak-data:/data
