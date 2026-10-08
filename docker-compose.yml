@@ -50,6 +50,7 @@ services:
       GIT_SSH_COMMAND: >-
         ssh -i /run/secrets/deploy_key -o IdentitiesOnly=yes
         -o StrictHostKeyChecking=accept-new -o UserKnownHostsFile=/data/publish/known_hosts
+        -o ServerAliveInterval=30 -o ServerAliveCountMax=10
     command: ["publish", "--raw", "/data/raw", "--workdir", "/data/publish",
               "--watch", "/data/output/index.json", "--interval", "600"]
     volumes:
