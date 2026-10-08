@@ -34,7 +34,17 @@ Updating after a `git pull` in either repository:
 docker compose build generator && docker compose up -d --force-recreate generator
 ```
 
-KML network link for ATAK: `https://<domain>/fi/kansallispuistot/nuuksio/nuuksio_fi.kml` (or the `.kmz` directly). Icon set: `https://<domain>/iconset/lipas2tak_iconset.zip`.
+### KML network links
+
+In ATAK: **Import → KML Link**, paste the URL and enable auto refresh (e.g. 86400 s).
+
+- All areas: `<PUBLIC_BASE_URL>/lipas2tak_fi.kml` (or `lipas2tak_en.kml`). National parks are on by default; regions are listed but off. Switch areas on and off in Overlay Manager → Network Resources.
+- A single area: `<PUBLIC_BASE_URL>/fi/kansallispuistot/nuuksio/nuuksio_fi.kmz`.
+- Icon set (install once): `<PUBLIC_BASE_URL>/iconset/lipas2tak_iconset.zip`.
+
+`index.html` lists every URL.
+
+**Internal network only:** set `PUBLIC_BASE_URL=http://<server LAN IP>:8080` and `WEB_BIND=0.0.0.0:8080` (or the LAN IP) in `.env`, then rebuild the outputs. The base URL is written into the link files, so changing it later means the links have to be re-added on the devices.
 
 ## Custom icons
 
