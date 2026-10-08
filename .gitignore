@@ -1,3 +1,6 @@
 .env
 certs/
 data/
+# Pilotin kuvakkeet (tekijänoikeus: Metsähallitus) eivät kuulu repoon
+icons/*
+!icons/README.md

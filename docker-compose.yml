@@ -19,9 +19,12 @@ services:
     restart: unless-stopped
     environment:
       LIPAS2TAK_PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-http://localhost:8080}
+      # Oma kuvakesarja (esim. pilotin Luontoon.fi-kuvakkeet): ks. .env.example
+      LIPAS2TAK_ICONS_DIR: ${LIPAS2TAK_ICONS_DIR:-}
     command: ["schedule", "--every-days", "${LIPAS2TAK_EVERY_DAYS:-7}", "--dump", "/data/raw"]
     volumes:
       - lipas2tak-data:/data
+      - ./icons:/app/icons/custom:ro
 
   web:
     image: nginx:1.27-alpine
