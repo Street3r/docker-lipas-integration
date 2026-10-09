@@ -27,7 +27,7 @@ services:
       - ./icons:/app/icons/custom:ro
 
   web:
-    image: nginx:1.27-alpine
+    image: nginx:1.31-alpine
     restart: unless-stopped
     ports:
       - "${WEB_BIND:-127.0.0.1:8080}:80"   # TLS is handled by the server's reverse proxy
