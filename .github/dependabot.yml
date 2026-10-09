@@ -1,0 +1,7 @@
+version: 2
+updates:
+  # nginx image in docker-compose.yml
+  - package-ecosystem: "docker-compose"
+    directory: "/"
+    schedule:
+      interval: "monthly"
