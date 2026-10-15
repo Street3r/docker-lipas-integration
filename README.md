@@ -70,6 +70,23 @@ The `publisher` container watches the generator output. After every run it build
 
 The publisher checks for new output every 10 minutes and publishes the first time it starts.
 
+### GitHub Pages only (no nginx)
+
+When the files are only served from GitHub Pages, the `web` service is not needed. Keep `WEB_BIND=127.0.0.1:8080` (or leave it as is) and start only:
+
+```bash
+docker compose up -d generator publisher
+```
+
+`PUBLIC_BASE_URL` then only affects the generator's local output, not the published version, which always uses `PUBLISH_BASE_URL`.
+
+### Troubleshooting the push
+
+- `Permission denied (publickey)`: the deploy key is missing from the data repository or lacks write access, or the key file is not readable by uid 10001.
+- `Connection reset by peer` or `the remote end hung up unexpectedly` during a large push: some networks cut long SSH sessions on port 22. Use GitHub's SSH endpoint on port 443 in `.env`:
+  `PUBLISH_REPO=ssh://git@ssh.github.com:443/Street3r/finland-outdoor-tak-data.git`
+  then `docker compose up -d --force-recreate publisher`.
+
 ## Custom icons
 
 By default the generator uses the tool's own icon set. To use another set, see [icons/README.md](icons/README.md).
