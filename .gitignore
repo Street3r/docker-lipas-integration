@@ -5,3 +5,8 @@ data/
 icons/*
 !icons/README.md
 secrets/
+
+# Local run outputs copied out of the volume
+output/
+raw/
+*.log
