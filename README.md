@@ -11,29 +11,32 @@ Docker Compose stack that runs the Lipas → TAK service:
 
 ## Setup
 
-Clone both repositories side by side:
-
 ```bash
-mkdir lipas && cd lipas
-git clone https://github.com/Street3r/python-lipas2tak-tool
 git clone https://github.com/Street3r/docker-lipas-integration
 cd docker-lipas-integration          # run the compose commands in this directory
 cp .env.example .env
-docker compose build generator       # builds the image from ../python-lipas2tak-tool
+docker compose pull                  # prebuilt image ghcr.io/street3r/python-lipas2tak-tool:main
 docker compose up -d generator
 docker compose logs -f generator
 ```
+
+The generator runs weekly at `LIPAS2TAK_SCHEDULE_AT` (default `mon 04:00`, time zone `LIPAS2TAK_TZ`, default `Europe/Helsinki`). On start it runs at once only if there is no earlier output or a scheduled run was missed, so restarts and updates do not move the schedule. To run now: `docker compose run --rm generator run --dump /data/raw` (the publisher picks up the new output).
+
+To build the image yourself instead, clone python-lipas2tak-tool next to this repository, set `LIPAS2TAK_IMAGE=lipas2tak:local` in `.env` and run `docker compose build generator`.
 
 Copy the results out of the volume: `docker compose cp generator:/data/output ./output`
 (raw data: `generator:/data/raw`). Serve the files with nginx: `docker compose up -d web`.
 
 The first run takes several minutes (Lipas paging, OSM, region boundaries). Raw data is saved in the volume (`/data/raw`) so problems can be investigated without fetching again.
 
-Updating after a `git pull` in either repository:
+Updating:
 
 ```bash
-docker compose build generator && docker compose up -d --force-recreate generator
+git pull --ff-only                   # this repository
+docker compose pull && docker compose up -d
 ```
+
+With a local build (`LIPAS2TAK_IMAGE=lipas2tak:local`): `git pull` in ../python-lipas2tak-tool, then `docker compose build generator && docker compose up -d --force-recreate generator publisher`.
 
 ### KML network links
 
@@ -63,7 +66,7 @@ The `publisher` container watches the generator output. After every run it build
 4. In `.env`, set `COMPOSE_PROFILES=github` and check the `PUBLISH_*` values.
 5. Try it without pushing:
    ```bash
-   docker compose build
+   docker compose pull
    docker compose run --rm publisher publish --raw /data/raw --workdir /data/publish --dry-run
    ```
 6. Start it: `docker compose up -d publisher`, then `docker compose logs -f publisher`.
@@ -108,4 +111,4 @@ Each feeder reads `index.json` and:
 
 ## Suomeksi lyhyesti
 
-Compose-pino ajaa python-lipas2tak-tool-generaattorin viikoittain ja jakaa tuotokset nginxillä; Data Sync -feederit tulevat myöhemmin. Koodi on MIT-lisensoitu, ja jaettava aineisto on ODbL 1.0 -lisensoitu lähdemainintoineen (Lipas / Jyväskylän yliopisto, © OpenStreetMapin tekijät, Tilastokeskus).
+Compose-pino ajaa python-lipas2tak-tool-generaattorin viikoittain (oletuksena maanantaisin klo 4.00 Suomen aikaa, valmiilla ghcr-kuvalla; päivitys `docker compose pull && docker compose up -d`) ja jakaa tuotokset nginxillä; Data Sync -feederit tulevat myöhemmin. Koodi on MIT-lisensoitu, ja jaettava aineisto on ODbL 1.0 -lisensoitu lähdemainintoineen (Lipas / Jyväskylän yliopisto, © OpenStreetMapin tekijät, Tilastokeskus).
