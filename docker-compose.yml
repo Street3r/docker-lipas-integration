@@ -4,13 +4,15 @@
 #   cp .env.example .env   # fill in the values
 #   docker compose up -d
 #
-# The generator runs immediately on start and then every LIPAS2TAK_EVERY_DAYS days.
+# The generator runs weekly at LIPAS2TAK_SCHEDULE_AT (default Monday 04:00
+# Finnish time). On start it runs at once only if a scheduled run was missed.
 
-# By default the image is built locally from the sibling clone:
-#   git clone https://github.com/Street3r/python-lipas2tak-tool ../python-lipas2tak-tool
-# A prebuilt image can be enabled in .env (LIPAS2TAK_IMAGE=ghcr.io/...).
+# By default the prebuilt public image from ghcr is used. Update:
+#   docker compose pull && docker compose up -d
+# Local build instead: LIPAS2TAK_IMAGE=lipas2tak:local in .env, a clone in
+# ../python-lipas2tak-tool and `docker compose build generator`.
 x-lipas2tak-image: &lipas2tak-image
-  image: ${LIPAS2TAK_IMAGE:-lipas2tak:local}
+  image: ${LIPAS2TAK_IMAGE:-ghcr.io/street3r/python-lipas2tak-tool:main}
   build: ${LIPAS2TAK_BUILD_CONTEXT:-../python-lipas2tak-tool}
 
 services:
@@ -21,7 +23,8 @@ services:
       LIPAS2TAK_PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-http://localhost:8080}
       # Custom icon set: see .env.example and icons/README.md
       LIPAS2TAK_ICONS_DIR: ${LIPAS2TAK_ICONS_DIR:-}
-    command: ["schedule", "--every-days", "${LIPAS2TAK_EVERY_DAYS:-7}", "--dump", "/data/raw"]
+    command: ["schedule", "--at", "${LIPAS2TAK_SCHEDULE_AT:-mon 04:00}", "--tz", "${LIPAS2TAK_TZ:-Europe/Helsinki}",
+              "--dump", "/data/raw"]
     volumes:
       - lipas2tak-data:/data
       - ./icons:/app/icons/custom:ro
