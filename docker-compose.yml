@@ -14,6 +14,9 @@
 x-lipas2tak-image: &lipas2tak-image
   image: ${LIPAS2TAK_IMAGE:-ghcr.io/street3r/python-lipas2tak-tool:main}
   build: ${LIPAS2TAK_BUILD_CONTEXT:-../python-lipas2tak-tool}
+  # Small init process as PID 1: passes SIGTERM on to Python, so `docker compose
+  # stop/up` ends the container at once instead of killing it after 10 s
+  init: true
 
 services:
   generator:
